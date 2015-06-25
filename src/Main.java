@@ -1,16 +1,24 @@
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Main {
 
 
 	private static final int INCREMENT_STRIPE_AMOUNT = 100000;
+	private static final double PRECISION = 1000000000000.0;
 
 	public static void main(String args[])
 	{
-		getFunctionValue("5-3*4",0);
-		//System.out.println(calculateArea(0, Math.PI, 0.00000000000001));
 
+		getFunctionValue("(5.1+1.1)*(2.2+3.2)",0);
+
+	}
+
+	private static double round(double d)
+	{
+		return Math.round(d * PRECISION) / PRECISION;
 	}
 
 
@@ -27,7 +35,6 @@ public class Main {
 		return area;
 
 	}
-
 
 	private static double calculateArea(double minX,double maxX, double epsilon)
 	{
@@ -52,27 +59,71 @@ public class Main {
 	private static void getFunctionValue(String input,double xVal)
 	{
 		input = input.toLowerCase();
+		input = input.replace("x",Double.toString(xVal));
+
+
+		Pattern p = Pattern.compile("\\((.*?)\\)");
+		Matcher m = p.matcher(input);
+
+		while(m.find()) {
+			String inside = m.group(1);
+			ArrayList<String> insideArray = new ArrayList<>(Arrays.asList(inside.split("((?<=\\*|\\/|\\+)|(?=\\*|\\/|\\+))")));
+			evaluateArray(insideArray);
+			input = input.replace(inside,insideArray.toString().replaceAll("\\[|\\]",""));
+		}
+
 		ArrayList<String> functionArray = new ArrayList<String>(Arrays.asList(input.split("((?<=\\*|\\/|\\+)|(?=\\*|\\/|\\+))")));
+		evaluateArray(functionArray);
+
+		System.out.println("--------------------");
+
+		for(String element : functionArray)
+		{
+			System.out.println(element);
+		}
 
 
-		// Replace X's with their Value
+	}
+
+
+
+	private static void evaluateArray(ArrayList<String> functionArray)
+	{
+		// Evaluate SIN and COS
+
 		for (int i = 0; i < functionArray.size(); i++) {
 
-			if(functionArray.get(i).equals("x"))
+			if(functionArray.get(i).contains("sin"))
 			{
-				functionArray.set(i,Double.toString(xVal));
-			}
+				String str = functionArray.get(i);
+				double inside = Double.parseDouble(str.substring(str.indexOf("(") + 1, str.indexOf(")")));
+				functionArray.set(i, Double.toString(round(Math.sin(inside))));
 
-			System.out.println(functionArray.get(i));
+			}
+			else if(functionArray.get(i).contains("cos"))
+			{
+				String str = functionArray.get(i);
+				double inside = Double.parseDouble(str.substring(str.indexOf("(")+1,str.indexOf(")")));
+				functionArray.set(i, Double.toString(round((Math.cos(inside)))));
+			}
 
 		}
 
 
+		for (int i = 0; i < functionArray.size(); i++) {
+
+
+			functionArray.set(i,functionArray.get(i).replaceAll("\\(|\\)",""));
+
+		}
+
+
+
+
 		boolean foundChar = true;
 
-
 		// First Multiplication and Division
-		// Second Addition and Subtraction
+		// Second Addition and 'Subtraction'
 
 
 		while (foundChar)
@@ -98,7 +149,7 @@ public class Main {
 
 				if(functionArray.get(i).equals("/"))
 				{
-					double dividend = Double.parseDouble(functionArray.get(i-1));
+					double dividend = Double.parseDouble(functionArray.get(i - 1));
 					double divisor = Double.parseDouble(functionArray.get(i+1));
 					double result = dividend/divisor;
 
@@ -139,23 +190,6 @@ public class Main {
 
 			}
 		}
-
-
-
-
-		System.out.println("--------------------");
-
-
-		for(String element : functionArray)
-		{
-			System.out.println(element);
-		}
-
-
-
-
-
-
 
 	}
 
