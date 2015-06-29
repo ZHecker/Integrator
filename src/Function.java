@@ -1,7 +1,5 @@
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class Function {
 
@@ -10,78 +8,133 @@ public class Function {
 	private final double PRECISION = 1000000000000.0;
 
 	public Function(String function) {
-		this.function = function.toLowerCase();
+		this.function = function.toLowerCase().replace("e",Double.toString(Math.E)).replace("pi",Double.toString(Math.PI));
 	}
 
 	public double getFunctionValue(double xVal)
 	{
-		String regex = "((?<=\\*|\\/|\\+|\\^)|(?=\\*|\\/|\\+|\\^))";
-
-		String lFunction = function.replace("x",Double.toString(xVal));
-		Pattern p = Pattern.compile("\\((.*?)\\)");
-		Matcher m = p.matcher(lFunction);
-
-		while(m.find()) {
-			String inside = m.group(1);
-			ArrayList<String> insideArray = new ArrayList<>(Arrays.asList(inside.split(regex)));
-			evaluateArray(insideArray);
-			lFunction = lFunction.replace(inside,insideArray.toString().replaceAll("\\[|\\]",""));
-		}
-
-		ArrayList<String> functionArray = new ArrayList<>(Arrays.asList(lFunction.split(regex)));
-		evaluateArray(functionArray);
-
-
-		if(functionArray.size() > 1)
-		{
-			System.out.println("--------------------");
-
-			for(String element : functionArray)
-			{
-				System.out.println(element);
-			}
-
-			return 0;
-
-		}
-
-		return Double.parseDouble(functionArray.get(0));
-
+		System.out.println("Function: " + function + " ; x = " + xVal);
+		String evlFunction = function.replace("x",Double.toString(xVal));
+		return evalExpression(evlFunction);
 	}
 
-	private void evaluateArray(ArrayList<String> functionArray)
+	private double evalExpression(String expr)
 	{
-		// Evaluate SIN and COS
+		System.out.println("Evaluating: " + expr);
+		System.out.println("--------------DEBUG-----------------");
+		String trig = evalTrig(expr);
+		double value = evalBrackets(trig);
+		System.out.println("--------------/DEBUG----------------");
+		return value;
+	}
 
-		for (int i = 0; i < functionArray.size(); i++) {
+	private double evalBrackets(String expr)
+	{
+		System.out.println("evalBrackets: " + expr);
 
-			if(functionArray.get(i).contains("sin"))
+		boolean openBracketFound = false;
+		int openBracketIndex = -1;
+		int closingBracketIndex = -1;
+
+		for (int i = 0; i < expr.length(); i++) {
+
+			if(expr.charAt(i) == '(' && !openBracketFound)
 			{
-				String str = functionArray.get(i);
-				double inside = Double.parseDouble(str.substring(str.indexOf("(") + 1, str.indexOf(")")));
-				functionArray.set(i, Double.toString(round(Math.sin(inside))));
-
+				openBracketFound = true;
+				openBracketIndex = i;
 			}
-			else if(functionArray.get(i).contains("cos"))
+
+			if(expr.charAt(i) == ')')
 			{
-				String str = functionArray.get(i);
-				double inside = Double.parseDouble(str.substring(str.indexOf("(")+1,str.indexOf(")")));
-				functionArray.set(i, Double.toString(round((Math.cos(inside)))));
+				closingBracketIndex = i;
 			}
-
 		}
 
+		if(openBracketFound)
+		{
+			double value = evalBrackets(expr.substring(openBracketIndex + 1, closingBracketIndex));
+			StringBuilder stringBuilder = new StringBuilder(expr);
+			stringBuilder.replace(openBracketIndex, closingBracketIndex + 1,Double.toString(value));
 
-		for (int i = 0; i < functionArray.size(); i++) {
+			double res = numEvaluateArray(stringBuilder.toString());
+			System.out.println("obEval: " + stringBuilder.toString() + " = " + res);
+			return res;
+		}
+		else //!openBracketFound
+		{
+			double res = numEvaluateArray(expr);
+			System.out.println("!obEval: " + expr + " = " + res);
+			return res;
+		}
+	}
 
+	private String evalTrig(String expr)
+	{
 
-			functionArray.set(i,functionArray.get(i).replaceAll("\\(|\\)",""));
+		System.out.println("evalTrig: " + expr);
+		StringBuilder subString = new StringBuilder(expr);
 
+		for (int i = 0; i < expr.length(); i++) {
+
+			if(expr.charAt(i) == 'c' && expr.charAt(i+1) == 'o' && expr.charAt(i+2) == 's')
+			{
+				boolean foundClose = false;
+				int openBracketIndex = i+3;
+				int closingBracketIndex = i+3;
+
+				while (!foundClose)
+				{
+					if(expr.charAt(closingBracketIndex) == ')')
+					{
+						foundClose = true;
+					}
+					else
+					{
+						closingBracketIndex++;
+					}
+				}
+
+				double res = evalBrackets(subString.substring(openBracketIndex + 1, closingBracketIndex + 1));
+				subString.replace(i,closingBracketIndex+2,Double.toString(round(Math.cos(res))));
+				expr = subString.toString();
+			}
+			else if(expr.charAt(i) == 's' && expr.charAt(i+1) == 'i' && expr.charAt(i+2) == 'n')
+			{
+				boolean foundClose = false;
+				int openBracketIndex = i+3;
+				int closingBracketIndex = i+3;
+
+				while (!foundClose)
+				{
+					if(expr.charAt(closingBracketIndex) == ')')
+					{
+						foundClose = true;
+					}
+					else
+					{
+						closingBracketIndex++;
+					}
+				}
+
+				double res = evalBrackets(subString.substring(openBracketIndex + 1, closingBracketIndex + 1));
+				subString.replace(i,closingBracketIndex+2,Double.toString(round(Math.sin(res))));
+				expr = subString.toString();
+			}
 		}
 
+		System.out.println("Trig Result: " + expr);
+		return expr;
+	}
 
+	private double numEvaluateArray(String expr)
+	{
+		String regex = "((?<=\\*|\\/|\\+|\\^)|(?=\\*|\\/|\\+|\\^))";
+		ArrayList<String> exprArray = new ArrayList<>(Arrays.asList(expr.split(regex)));
+		return numEvaluateArray(exprArray);
+	}
 
-
+	private double numEvaluateArray(ArrayList<String> functionArray)
+	{
 		boolean foundChar = true;
 
 		// First Multiplication and Division
@@ -141,7 +194,6 @@ public class Function {
 			}
 		}
 
-
 		foundChar = true;
 
 		while(foundChar)
@@ -167,6 +219,7 @@ public class Function {
 			}
 		}
 
+		return Double.parseDouble(functionArray.get(0));
 	}
 
 	private double round(double d)

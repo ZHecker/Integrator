@@ -7,8 +7,12 @@ public class Main {
 	public static void main(String args[])
 	{
 
-		Function f1 = new Function("cos(x)*sin(2^x)");
-		System.out.println(calculateArea(f1, 0, 2, 0.00001));
+		Function f1 = new Function("((x+x*x)+3)*x+cos(x*(x+1))");
+		calculateArea(f1,-1,1,100);
+
+
+		//System.out.println(f1.getFunctionValue(2));
+		//System.out.println(calculateArea(f1, 0, 1, 10));
 
 	}
 
@@ -19,10 +23,21 @@ public class Main {
 		double area = 0.0;
 		double deltaX = (maxX - minX)/stripes;
 
+
+		double saveComputingTime = f.getFunctionValue(minX);
+
 		for (int i = 0; i < stripes; i++) {
-			double h = (f.getFunctionValue(i*deltaX) + f.getFunctionValue((i + 1) * deltaX))/2;
+			double xNew = f.getFunctionValue(minX + (i + 1) * deltaX);
+			double h = (saveComputingTime+xNew)/2;
+			saveComputingTime = xNew;
 			area += deltaX * h;
 		}
+
+		System.out.println("------Numerical integration-------");
+		System.out.println("Integrated from " + minX + " to " + maxX);
+		System.out.println("deltaX = " + deltaX);
+		System.out.println("The Area is: " + area + " LE^2");
+		System.out.println("-------/Numerical Integration--------");
 
 		return area;
 
