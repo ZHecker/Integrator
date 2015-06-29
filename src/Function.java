@@ -4,33 +4,75 @@ import java.util.Arrays;
 public class Function {
 
 
+	private final boolean debug = false;
 	private String function;
 	private final double PRECISION = 1000000000000.0;
 
 	public Function(String function) {
-		this.function = function.toLowerCase().replace("e",Double.toString(Math.E)).replace("pi",Double.toString(Math.PI));
+
+		if(isValid(function))
+		{
+			this.function = function.toLowerCase().replace("e",Double.toString(Math.E)).replace("pi",Double.toString(Math.PI));
+		}
+		else
+		{
+			System.out.println("Not VALID!");
+		}
+
 	}
 
 	public double getFunctionValue(double xVal)
 	{
-		System.out.println("Function: " + function + " ; x = " + xVal);
-		String evlFunction = function.replace("x",Double.toString(xVal));
+		//System.out.println("Function: " + function + " ; x = " + xVal);
+		String evlFunction = function.replace("x", Double.toString(xVal));
 		return evalExpression(evlFunction);
+	}
+
+	private boolean isValid(String expr)
+	{
+		int openBracketsCount = 0;
+		int closedBracketsCount = 0;
+
+		for (int i = 0; i < expr.length(); i++) {
+
+			if(expr.charAt(i) == '(')
+				openBracketsCount++;
+			else if (expr.charAt(i) == ')')
+				closedBracketsCount++;
+
+		}
+
+		if(openBracketsCount == closedBracketsCount)
+		{
+			return true;
+		}
+
+		return false;
+
 	}
 
 	private double evalExpression(String expr)
 	{
-		System.out.println("Evaluating: " + expr);
-		System.out.println("--------------DEBUG-----------------");
+		if(debug)
+		{
+			System.out.println("Evaluating: " + expr);
+			System.out.println("--------------DEBUG-----------------");
+		}
 		String trig = evalTrig(expr);
 		double value = evalBrackets(trig);
-		System.out.println("--------------/DEBUG----------------");
+		if(debug)
+		{
+			System.out.println("--------------/DEBUG----------------");
+		}
 		return value;
 	}
 
 	private double evalBrackets(String expr)
 	{
-		System.out.println("evalBrackets: " + expr);
+		if(debug)
+		{
+			System.out.println("evalBrackets: " + expr);
+		}
 
 		boolean openBracketFound = false;
 		int openBracketIndex = -1;
@@ -57,72 +99,112 @@ public class Function {
 			stringBuilder.replace(openBracketIndex, closingBracketIndex + 1,Double.toString(value));
 
 			double res = numEvaluateArray(stringBuilder.toString());
-			System.out.println("obEval: " + stringBuilder.toString() + " = " + res);
+
+			if(debug)
+			{
+				System.out.println("obEval: " + stringBuilder.toString() + " = " + res);
+			}
 			return res;
 		}
 		else //!openBracketFound
 		{
 			double res = numEvaluateArray(expr);
-			System.out.println("!obEval: " + expr + " = " + res);
+			if(debug)
+			{
+				System.out.println("!obEval: " + expr + " = " + res);
+			}
 			return res;
 		}
 	}
 
 	private String evalTrig(String expr)
 	{
+		if(debug)
+		{
+			System.out.println("evalTrig: " + expr);
+		}
 
-		System.out.println("evalTrig: " + expr);
 		StringBuilder subString = new StringBuilder(expr);
+
+		for (int i = 0; i < expr.length(); i++) {
+
+			if(expr.charAt(i) == 's' && expr.charAt(i+1) == 'i' && expr.charAt(i+2) == 'n')
+			{
+
+				int openBracketCount = 0;
+				int closingBracketCount = 0;
+				int openBracketIndex = i+3;
+				int closingBracketIndex = i+3;
+
+				for (int j = i; j < expr.length(); j++) {
+
+					if(expr.charAt(j) == '(')
+					{
+						openBracketCount++;
+					}
+					else if(expr.charAt(j) == ')')
+					{
+						closingBracketCount++;
+					}
+
+					if(closingBracketCount == openBracketCount && (closingBracketCount != 0 || openBracketCount != 0))
+					{
+						closingBracketIndex = j;
+						break;
+					}
+				}
+
+				String part = subString.substring(openBracketIndex +1, closingBracketIndex);
+				double res = evalBrackets(part);
+				subString.replace(i,closingBracketIndex+1,Double.toString(round(Math.sin(res))));
+				expr = subString.toString();
+			}
+		}
+
 
 		for (int i = 0; i < expr.length(); i++) {
 
 			if(expr.charAt(i) == 'c' && expr.charAt(i+1) == 'o' && expr.charAt(i+2) == 's')
 			{
-				boolean foundClose = false;
+
+				int openBracketCount = 0;
+				int closingBracketCount = 0;
 				int openBracketIndex = i+3;
 				int closingBracketIndex = i+3;
 
-				while (!foundClose)
-				{
-					if(expr.charAt(closingBracketIndex) == ')')
+
+				for (int j = i; j < expr.length(); j++) {
+
+					if(expr.charAt(j) == '(')
 					{
-						foundClose = true;
+						openBracketCount++;
 					}
-					else
+					else if(expr.charAt(j) == ')')
 					{
-						closingBracketIndex++;
+						closingBracketCount++;
+					}
+
+					if(closingBracketCount == openBracketCount && (closingBracketCount != 0 || openBracketCount != 0))
+					{
+						closingBracketIndex = j;
+						break;
 					}
 				}
 
-				double res = evalBrackets(subString.substring(openBracketIndex + 1, closingBracketIndex + 1));
-				subString.replace(i,closingBracketIndex+2,Double.toString(round(Math.cos(res))));
-				expr = subString.toString();
-			}
-			else if(expr.charAt(i) == 's' && expr.charAt(i+1) == 'i' && expr.charAt(i+2) == 'n')
-			{
-				boolean foundClose = false;
-				int openBracketIndex = i+3;
-				int closingBracketIndex = i+3;
 
-				while (!foundClose)
-				{
-					if(expr.charAt(closingBracketIndex) == ')')
-					{
-						foundClose = true;
-					}
-					else
-					{
-						closingBracketIndex++;
-					}
-				}
-
-				double res = evalBrackets(subString.substring(openBracketIndex + 1, closingBracketIndex + 1));
-				subString.replace(i,closingBracketIndex+2,Double.toString(round(Math.sin(res))));
+				String part = subString.substring(openBracketIndex +1, closingBracketIndex);
+				double res = evalBrackets(part);
+				subString.replace(i,closingBracketIndex+1,Double.toString(round(Math.cos(res))));
 				expr = subString.toString();
 			}
 		}
 
-		System.out.println("Trig Result: " + expr);
+
+		if(debug)
+		{
+			System.out.println("Trig Result: " + expr);
+		}
+
 		return expr;
 	}
 
@@ -226,5 +308,4 @@ public class Function {
 	{
 		return Math.round(d * PRECISION) / PRECISION;
 	}
-
 }
