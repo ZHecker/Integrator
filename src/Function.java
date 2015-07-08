@@ -130,7 +130,6 @@ public class Function {
 
 			if(expr.charAt(i) == 's' && expr.charAt(i+1) == 'i' && expr.charAt(i+2) == 'n')
 			{
-
 				int openBracketCount = 0;
 				int closingBracketCount = 0;
 				int openBracketIndex = i+3;
@@ -190,7 +189,6 @@ public class Function {
 						break;
 					}
 				}
-
 
 				String part = subString.substring(openBracketIndex +1, closingBracketIndex);
 				double res = evalBrackets(part);

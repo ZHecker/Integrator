@@ -9,8 +9,14 @@ public class Main {
 
 		Function f1 = new Function("((x+x*x)+3)*x+cos(x*(x+1))");
 		Function f2 = new Function("sin(x+(x*(x+x)))");
-		System.out.println(f1.getFunctionValue(2));
-		System.out.println(f2.getFunctionValue(2));
+		Function f3 = new Function("x^2+-1");
+
+
+
+		calculateArea_Simpson(f3,-5,5,START_STRIPES);
+		calculateArea_Trap(f3,-5,5,START_STRIPES * 5);
+		calculateArea(f3,-5,5,START_STRIPES * 5);
+
 
 	}
 
@@ -30,7 +36,7 @@ public class Main {
 			area += deltaX * h;
 		}
 
-		System.out.println("------Numerical integration-------");
+		System.out.println("------Numerical integration (RECHT)-------");
 		System.out.println("Integrated from " + minX + " to " + maxX);
 		System.out.println("deltaX = " + deltaX + " => " + stripes);
 		System.out.println("The Area is: " + area + " LE^2");
@@ -39,7 +45,6 @@ public class Main {
 		return area;
 
 	}
-
 	private static double calculateArea(Function f,double minX,double maxX, double epsilon)
 	{
 		int stripes = START_STRIPES;
@@ -60,4 +65,49 @@ public class Main {
 
 		return newArea;
 	}
+	private static double calculateArea_Trap(Function f,double minX,double maxX,int stripes)
+	{
+		double area = 0.0;
+		double deltaX = (maxX - minX)/stripes;
+
+		for (int i = 0; i < stripes; i++) {
+
+			double a = minX + (i*deltaX);
+			double b = minX + (i+1)*deltaX;
+			area += (b-a)*f.getFunctionValue((a+b)/2.0);
+
+		}
+
+
+		System.out.println("------Numerical integration (TRAP)-------");
+		System.out.println("Integrated from " + minX + " to " + maxX);
+		System.out.println("deltaX = " + deltaX + " => " + stripes);
+		System.out.println("The Area is: " + area + " LE^2");
+		System.out.println("-------/Numerical Integration--------");
+
+		return area;
+	}
+	private static double calculateArea_Simpson(Function f,double minX,double maxX,int stripes)
+	{
+		double area = 0.0;
+		double deltaX = (maxX - minX)/stripes;
+
+		for (int i = 0; i < stripes; i++) {
+
+			double a = minX + (i*deltaX);
+			double b = minX + (i+1)*deltaX;
+			area += (b-a)/6.0*( f.getFunctionValue(a)+ 4 * f.getFunctionValue((a+b)/2.0) + f.getFunctionValue(b));
+
+		}
+
+
+		System.out.println("------Numerical integration (SIMPSON)-------");
+		System.out.println("Integrated from " + minX + " to " + maxX);
+		System.out.println("deltaX = " + deltaX + " => " + stripes);
+		System.out.println("The Area is: " + area + " LE^2");
+		System.out.println("-------/Numerical Integration--------");
+
+		return area;
+	}
+
 }
