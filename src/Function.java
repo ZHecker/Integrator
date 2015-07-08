@@ -53,6 +53,17 @@ public class Function {
 
 	private double evalExpression(String expr)
 	{
+		
+		for (int i = 1; i < expr.length(); i++) {
+			
+			if(expr.charAt(i) == '-' && expr.charAt(i-1) != '+')
+			{
+				StringBuilder stringBuilder = new StringBuilder(expr);
+				stringBuilder.insert(i,'+');
+				expr = stringBuilder.toString();
+			}
+		}
+		
 		if(debug)
 		{
 			System.out.println("Evaluating: " + expr);
